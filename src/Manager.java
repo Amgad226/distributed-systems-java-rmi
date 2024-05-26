@@ -31,11 +31,14 @@ public class Manager extends UnicastRemoteObject implements Remote, Serializable
 
     public static void main(String[] args) {
         try {
-            ServerInterface server = (ServerInterface) Naming.lookup("/server");
+
+            String serverIp = "192.168.112.1";
+            ServerInterface server = (ServerInterface) Naming.lookup("rmi://" + serverIp + "/server");
 
             try (Scanner scanner = new Scanner(System.in)) {
                 while (true) {
                     showMenu();
+
                     int choice = scanner.nextInt();
                     scanner.nextLine();
 
@@ -43,7 +46,7 @@ public class Manager extends UnicastRemoteObject implements Remote, Serializable
                         System.out.println("Exiting...");
                         break;
                     }
-
+//                    server = (ServerInterface) Naming.lookup("rmi://192.168.137.1/server");
                     handleUserChoice(server, scanner, choice);
                 }
             }
@@ -72,7 +75,7 @@ public class Manager extends UnicastRemoteObject implements Remote, Serializable
                 captureUserPhoto(server, scanner);
                 break;
             case 3:
-                captureUserScreenshot(server, scanner);
+               captureUserScreenshot(server, scanner);
                 break;
 
             default:
@@ -120,7 +123,8 @@ public class Manager extends UnicastRemoteObject implements Remote, Serializable
         String host = "rmi://" + employeeIp + "/employee" ;
 //        String host = "/employee";
 
-        EmployeeInterface rmiEmployee = (EmployeeInterface) Naming.lookup(host);
+        EmployeeInterface rmiEmployee = new Employee("sd"); // FIXME
+//        EmployeeInterface rmiEmployee = (EmployeeInterface) Naming.lookup(host);
         System.out.println(rmiEmployee.getName());
         byte[] byteImage = rmiEmployee.captureScreenshot();
         BufferedImage bufferedScreenshot  =convertByteArrayToBufferedImage(byteImage);

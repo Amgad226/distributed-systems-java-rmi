@@ -12,7 +12,6 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.rmi.Naming;
 import java.rmi.RemoteException;
-import java.rmi.registry.LocateRegistry;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.Scanner;
 
@@ -47,11 +46,9 @@ public class Employee extends UnicastRemoteObject implements Serializable, Emplo
             byte[] imageInByte = baos.toByteArray();
             baos.close();
             return imageInByte;
-        } catch (AWTException ex) {
+        } catch (AWTException | IOException ex) {
             ex.printStackTrace();
             return null;
-        } catch (IOException e) {
-            throw new RuntimeException(e);
         }
     }
 
@@ -67,33 +64,23 @@ public class Employee extends UnicastRemoteObject implements Serializable, Emplo
     private static String getIp() throws UnknownHostException {
         InetAddress inetAddress = InetAddress.getLocalHost();
         return inetAddress.getHostAddress();
-
     }
 
     public static void main(String[] args) {
         try {
-            //
-            ServerInterface server = (ServerInterface) Naming.lookup("/server");
             Scanner reader = new Scanner(System.in);
             System.out.println("Enter your name: ");
             String name = reader.nextLine();
             reader.close();
-
             EmployeeInterface employee = new Employee(name);
+
+            String serverIp = "192.168.112.1";
+            ServerInterface server = (ServerInterface) Naming.lookup("rmi://" + serverIp + "/server");
+
             server.register(employee);
-            System.out.println("Client registered as " + name);
-
-//            int port  = 1200;
-//            LocateRegistry.createRegistry(port);
-
-            String ip = getIp();
-            Naming.rebind("rmi://" + ip + "/employee", employee);
-
-            System.out.println("Monitoring Employee is ready....");
+            System.out.println("Employee registered with name: " + name);
         } catch (Exception e) {
             e.printStackTrace();
-            System.out.println(e.getMessage());
-            ;
         }
     }
 }
