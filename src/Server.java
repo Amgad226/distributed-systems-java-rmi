@@ -1,12 +1,16 @@
 import interfaces.EmployeeInterface;
 import interfaces.ServerInterface;
+import org.opencv.core.Mat;
 
+import javax.management.remote.rmi.RMIServer;
 import java.rmi.Naming;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.ArrayList;
 import java.util.List;
-
+import java.rmi.*;
+import java.rmi.server.*;
+import javax.naming.*;
 public class Server extends UnicastRemoteObject implements ServerInterface {
     List<EmployeeInterface> employees = new ArrayList<EmployeeInterface>();
 
@@ -17,15 +21,23 @@ public class Server extends UnicastRemoteObject implements ServerInterface {
     {
         employees.add(e);
     }
+    public Mat captureImage (EmployeeInterface e) throws RemoteException
+    {
+        return e.captureImage();
+    }
 
     @Override
     public List<EmployeeInterface> getEmployees() throws RemoteException {
+
         return this.employees;
     }
 
     public static void main(String[] args) {
         try {
-            Naming.rebind("//localhost/server", new Server());
+            System.setProperty("java.rmi.server.hostname", "192.168.137.1"); // Uses the loopback address, 127.0.0.1, if you don't do this.
+
+
+            Naming.rebind("rmi://192.168.137.1:5000/server", new Server());
             System.out.println("Monitoring Server is ready.");
         } catch (Exception e) {
             e.printStackTrace();

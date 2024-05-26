@@ -5,17 +5,24 @@ import org.opencv.imgcodecs.Imgcodecs;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.io.IOException;
+import java.io.Serializable;
+import java.net.MalformedURLException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.rmi.Naming;
+import java.rmi.NotBoundException;
+import java.rmi.Remote;
 import java.rmi.RemoteException;
+import java.rmi.server.RemoteStub;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.List;
 import java.util.Random;
 import java.util.Scanner;
 
-public class Manager extends UnicastRemoteObject {
+public class Manager extends UnicastRemoteObject implements Remote, Serializable {
     private static final long serialVersionUID = 1L;
 
     protected Manager() throws RemoteException {
@@ -24,7 +31,7 @@ public class Manager extends UnicastRemoteObject {
 
     public static void main(String[] args) {
         try {
-            ServerInterface server = (ServerInterface) Naming.lookup("//localhost/server");
+            ServerInterface server = (ServerInterface) Naming.lookup("rmi://192.168.137.1:5000/server");
 
             try (Scanner scanner = new Scanner(System.in)) {
                 while (true) {
@@ -50,12 +57,13 @@ public class Manager extends UnicastRemoteObject {
         System.out.println("Enter 1 to list all users");
         System.out.println("Enter 2 to capture photo for a user");
         System.out.println("Enter 3 to capture screenshot for a user");
+        System.out.println("Enter 4 to test");
         System.out.println("Enter 0 to exit");
         System.out.println("---------------------");
         System.out.print("Your choice: ");
     }
 
-    private static void handleUserChoice(ServerInterface server, Scanner scanner, int choice) throws RemoteException {
+    private static void handleUserChoice(ServerInterface server, Scanner scanner, int choice) throws IOException, NotBoundException {
         switch (choice) {
             case 1:
                 listAllUsers(server);
@@ -65,6 +73,21 @@ public class Manager extends UnicastRemoteObject {
                 break;
             case 3:
                 captureUserScreenshot(server, scanner);
+                break;
+            case 4:
+//                EmployeeInterface e = server.getEmployees().get(0);
+//                String ip = e.getDeviceAddress();
+                EmployeeInterface employee = (EmployeeInterface) Naming.lookup("employee");
+                System.out.println(employee.getName());
+                byte[] byteImage = employee.captureScreenshot();
+                BufferedImage image  =convertByteArrayToBufferedImage(byteImage);
+                System.out.println("store the bytes in var ");
+
+                Path path = Paths.get(System.getProperty("user.home"), "Desktop", "distributed_system","screenshots");
+                String randomString =generateRandomString(6);
+                String fileName = employee.getName() +"_"+randomString +".jpg";
+
+                saveScreenshotToFile(image, path,fileName);
                 break;
             default:
                 System.out.println("Invalid choice, please try again.");
@@ -96,7 +119,7 @@ public class Manager extends UnicastRemoteObject {
         return;
     }
 
-    private static void captureUserScreenshot(ServerInterface server, Scanner scanner) throws RemoteException {
+    private static void captureUserScreenshot(ServerInterface server, Scanner scanner) throws IOException {
         System.out.print("Enter username: ");
         String username = scanner.nextLine();
 
@@ -105,7 +128,8 @@ public class Manager extends UnicastRemoteObject {
             System.out.println("Employee not found.");
             return;
         }
-        BufferedImage screenshot = employee.captureScreenshot();
+        byte[] byteScreenshot = employee.captureScreenshot();
+        BufferedImage screenshot = convertByteArrayToBufferedImage(byteScreenshot);
         Path path = Paths.get(System.getProperty("user.home"), "Desktop", "distributed_system","screenshots");
         String randomString =generateRandomString(6);
         String fileName = username +"_"+randomString +".png";
@@ -133,13 +157,16 @@ public class Manager extends UnicastRemoteObject {
         System.out.println("Image saved to " + filePath);
     }
 
-    private static void saveScreenshotToFile(BufferedImage screenshot,Path path, String filename) {
+    private static void saveScreenshotToFile(BufferedImage screenshot,Path path, String filename) throws IOException{
         try {
             File directory = path.toFile();
             if (!directory.exists()) {
                 directory.mkdirs();
             }
             String filePath = path.resolve(filename).toString();
+            System.out.println(filePath);
+            System.out.println(screenshot);
+
             ImageIO.write(screenshot, "png", new File(filePath));
             System.out.println("Screenshot saved to " + filePath);
         } catch (Exception e) {
@@ -165,5 +192,14 @@ public class Manager extends UnicastRemoteObject {
         }
 
         return sb.toString();
+    }
+    public static BufferedImage convertByteArrayToBufferedImage(byte[] byteArray) throws IOException {
+        System.out.println(byteArray);
+        ByteArrayInputStream bais = new ByteArrayInputStream(byteArray);
+        BufferedImage image =  ImageIO.read(bais);
+        if(image == null){
+            System.out.println("the converted byte[] to bufferedImage return null ");
+        }
+        return image ;
     }
 }
