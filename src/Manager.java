@@ -31,7 +31,7 @@ public class Manager extends UnicastRemoteObject implements Remote, Serializable
 
     public static void main(String[] args) {
         try {
-            ServerInterface server = (ServerInterface) Naming.lookup("rmi://192.168.137.1:5000/server");
+            ServerInterface server = (ServerInterface) Naming.lookup("/server");
 
             try (Scanner scanner = new Scanner(System.in)) {
                 while (true) {
@@ -74,21 +74,7 @@ public class Manager extends UnicastRemoteObject implements Remote, Serializable
             case 3:
                 captureUserScreenshot(server, scanner);
                 break;
-            case 4:
-//                EmployeeInterface e = server.getEmployees().get(0);
-//                String ip = e.getDeviceAddress();
-                EmployeeInterface employee = (EmployeeInterface) Naming.lookup("employee");
-                System.out.println(employee.getName());
-                byte[] byteImage = employee.captureScreenshot();
-                BufferedImage image  =convertByteArrayToBufferedImage(byteImage);
-                System.out.println("store the bytes in var ");
 
-                Path path = Paths.get(System.getProperty("user.home"), "Desktop", "distributed_system","screenshots");
-                String randomString =generateRandomString(6);
-                String fileName = employee.getName() +"_"+randomString +".jpg";
-
-                saveScreenshotToFile(image, path,fileName);
-                break;
             default:
                 System.out.println("Invalid choice, please try again.");
         }
@@ -119,7 +105,7 @@ public class Manager extends UnicastRemoteObject implements Remote, Serializable
         return;
     }
 
-    private static void captureUserScreenshot(ServerInterface server, Scanner scanner) throws IOException {
+    private static void captureUserScreenshot(ServerInterface server, Scanner scanner) throws IOException, NotBoundException {
         System.out.print("Enter username: ");
         String username = scanner.nextLine();
 
@@ -128,17 +114,30 @@ public class Manager extends UnicastRemoteObject implements Remote, Serializable
             System.out.println("Employee not found.");
             return;
         }
-        byte[] byteScreenshot = employee.captureScreenshot();
-        BufferedImage screenshot = convertByteArrayToBufferedImage(byteScreenshot);
+        String employeeIp = employee.getDeviceAddress(); // or localhost
+        System.out.println(employeeIp);
+
+        String host = "rmi://" + employeeIp + "/employee" ;
+//        String host = "/employee";
+
+        EmployeeInterface rmiEmployee = (EmployeeInterface) Naming.lookup(host);
+        System.out.println(rmiEmployee.getName());
+        byte[] byteImage = rmiEmployee.captureScreenshot();
+        BufferedImage bufferedScreenshot  =convertByteArrayToBufferedImage(byteImage);
+
+        System.out.println(bufferedScreenshot);
+        System.out.println("store the bytes in var ");
+
         Path path = Paths.get(System.getProperty("user.home"), "Desktop", "distributed_system","screenshots");
         String randomString =generateRandomString(6);
-        String fileName = username +"_"+randomString +".png";
+        String fileName = rmiEmployee.getName() +"_"+randomString +".jpg";
 
-        saveScreenshotToFile(screenshot, path, fileName);
+        saveScreenshotToFile(bufferedScreenshot, path,fileName);
 
     }
 
     private static EmployeeInterface findEmployeeByName(ServerInterface server, String username) throws RemoteException {
+        System.out.println("findEmployeeByName");
         for (EmployeeInterface employee : server.getEmployees()) {
             if (employee.getName().equalsIgnoreCase(username)) {
                 return employee;

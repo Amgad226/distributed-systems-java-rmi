@@ -34,10 +34,10 @@ public class Server extends UnicastRemoteObject implements ServerInterface {
 
     public static void main(String[] args) {
         try {
-            System.setProperty("java.rmi.server.hostname", "192.168.137.1"); // Uses the loopback address, 127.0.0.1, if you don't do this.
+//            System.setProperty("java.rmi.server.hostname", "192.168.137.1"); // Uses the loopback address, 127.0.0.1, if you don't do this.
 
 
-            Naming.rebind("rmi://192.168.137.1:5000/server", new Server());
+            Naming.rebind("/server", new Server());
             System.out.println("Monitoring Server is ready.");
         } catch (Exception e) {
             e.printStackTrace();
