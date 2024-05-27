@@ -27,7 +27,7 @@ public class Manager extends UnicastRemoteObject implements Remote, Serializable
     public static void main(String[] args) {
         try {
 
-            String serverIp = "192.168.83.1:5000";
+            String serverIp = Server.SERVER_HOSTNAME+":"+Server.SERVER_PORT;
             ServerInterface server = (ServerInterface) Naming.lookup("rmi://" + serverIp + "/server");
 
             try (Scanner scanner = new Scanner(System.in)) {

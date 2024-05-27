@@ -83,7 +83,7 @@ public class Employee extends UnicastRemoteObject implements Serializable, Emplo
             reader.close();
 
             EmployeeInterface employee = new Employee(name);
-            ServerInterface server = (ServerInterface) Naming.lookup("//192.168.83.1:5000/server");
+            ServerInterface server = (ServerInterface) Naming.lookup("//192.168.137.178:5000/server");
             server.register(employee);
             System.out.println("Employee registered with name: " + name);
 

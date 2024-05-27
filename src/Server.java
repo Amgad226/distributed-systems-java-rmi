@@ -41,17 +41,29 @@ public class Server extends UnicastRemoteObject implements ServerInterface {
 
         return this.employees;
     }
+    public static String SERVER_HOSTNAME;
+
+    static {
+        try {
+            SERVER_HOSTNAME = getIp();
+        } catch (UnknownHostException e) {
+            throw new RuntimeException(e);
+        }
+    }
+    public static String SERVER_PORT="5000";
+
+
 
     public static void main(String[] args) {
         try {
             // Start the RMI registry programmatically
 //            LocateRegistry.createRegistry(1098);
+            System.out.println(Server.SERVER_HOSTNAME+":"+Server.SERVER_PORT);
+            System.setProperty("java.rmi.server.hostname", Server.SERVER_HOSTNAME); // Uses the loopback address, 127.0.0.1, if you don't do this.
+            Naming.rebind("rmi://"+SERVER_HOSTNAME+":"+Server.SERVER_PORT+"/server",Server.getInstance());
 
-            System.setProperty("java.rmi.server.hostname", "192.168.83.1"); // Uses the loopback address, 127.0.0.1, if you don't do this.
-            Naming.rebind("rmi://192.168.83.1:5000/server",Server.getInstance());
 
-
-            System.out.println("Monitoring Server is ready");
+            System.out.println("Monitoring Server is ready on:"+ Server.SERVER_HOSTNAME);
         } catch (Exception e) {
             e.printStackTrace();
         }
