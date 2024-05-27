@@ -47,13 +47,9 @@ public class Server extends UnicastRemoteObject implements ServerInterface {
             // Start the RMI registry programmatically
 //            LocateRegistry.createRegistry(1098);
 
-            System.setProperty("java.rmi.server.hostname", "192.168.137.1"); // Uses the loopback address, 127.0.0.1, if you don't do this.
-            Naming.rebind("rmi://192.168.137.1:5000/server",Server.getInstance());
+            System.setProperty("java.rmi.server.hostname", "192.168.83.1"); // Uses the loopback address, 127.0.0.1, if you don't do this.
+            Naming.rebind("rmi://192.168.83.1:5000/server",Server.getInstance());
 
-//            Server server = Server.getInstance();
-//            String ip = "192.168.137.1:5000";
-//            System.out.println(ip);
-//            Naming.rebind("/server", server);
 
             System.out.println("Monitoring Server is ready");
         } catch (Exception e) {

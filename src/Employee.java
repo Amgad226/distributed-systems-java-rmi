@@ -83,14 +83,15 @@ public class Employee extends UnicastRemoteObject implements Serializable, Emplo
             reader.close();
 
             EmployeeInterface employee = new Employee(name);
-            ServerInterface server = (ServerInterface) Naming.lookup("rmi://192.168.137.1:5000/server");
+            ServerInterface server = (ServerInterface) Naming.lookup("//192.168.83.1:5000/server");
             server.register(employee);
             System.out.println("Employee registered with name: " + name);
 
 
             String ip = getIp() ;
-//            System.setProperty("java.rmi.server.hostname", "192.168.137.1"); // Uses the loopback address, 127.0.0.1, if you don't do this.
-            Naming.rebind("rmi://"+ip+"/employee",employee);
+            System.out.println(ip);
+            System.setProperty("java.rmi.server.hostname", ip); // Uses the loopback address, 127.0.0.1, if you don't do this.
+            Naming.bind("rmi://"+ip+"/employee",employee);
             System.out.println("Monitoring employee is ready on :"+ip);
 
 
