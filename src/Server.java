@@ -32,29 +32,30 @@ public class Server extends UnicastRemoteObject implements ServerInterface {
 
     @Override
     public void register(EmployeeInterface e) throws RemoteException {
+        System.out.println(e);
         employees.add(e);
     }
 
     @Override
-    public Mat captureImage(EmployeeInterface e) throws RemoteException {
-        return e.captureImage();
-    }
-
-    @Override
     public List<EmployeeInterface> getEmployees() throws RemoteException {
+
         return this.employees;
     }
 
     public static void main(String[] args) {
         try {
             // Start the RMI registry programmatically
-            LocateRegistry.createRegistry(1099);
+//            LocateRegistry.createRegistry(1098);
 
-            Server server = Server.getInstance();
-            String ip = getIp();
-            Naming.rebind("rmi://" + ip + "/server", server);
+            System.setProperty("java.rmi.server.hostname", "192.168.137.1"); // Uses the loopback address, 127.0.0.1, if you don't do this.
+            Naming.rebind("rmi://192.168.137.1:5000/server",Server.getInstance());
 
-            System.out.println("Monitoring Server is ready at " + ip);
+//            Server server = Server.getInstance();
+//            String ip = "192.168.137.1:5000";
+//            System.out.println(ip);
+//            Naming.rebind("/server", server);
+
+            System.out.println("Monitoring Server is ready");
         } catch (Exception e) {
             e.printStackTrace();
         }

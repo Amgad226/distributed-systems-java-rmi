@@ -7,7 +7,7 @@ import java.rmi.Remote;
 import java.rmi.RemoteException;
 
 public interface EmployeeInterface extends Remote {
-    Mat  captureImage() throws RemoteException;
+    byte[]  captureImage() throws RemoteException;
     byte[] captureScreenshot() throws RemoteException;
     String getDeviceAddress() throws RemoteException;
     String getName() throws RemoteException;

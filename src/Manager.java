@@ -1,6 +1,9 @@
 import interfaces.EmployeeInterface;
 import interfaces.ServerInterface;
+
+import org.opencv.core.Core;
 import org.opencv.core.Mat;
+import org.opencv.core.MatOfByte;
 import org.opencv.imgcodecs.Imgcodecs;
 
 import javax.imageio.ImageIO;
@@ -23,6 +26,9 @@ import java.util.Random;
 import java.util.Scanner;
 
 public class Manager extends UnicastRemoteObject implements Remote, Serializable {
+    static {
+        System.loadLibrary( Core.NATIVE_LIBRARY_NAME );
+    }
     private static final long serialVersionUID = 1L;
 
     protected Manager() throws RemoteException {
@@ -32,7 +38,7 @@ public class Manager extends UnicastRemoteObject implements Remote, Serializable
     public static void main(String[] args) {
         try {
 
-            String serverIp = "192.168.112.1";
+            String serverIp = "192.168.137.1:5000";
             ServerInterface server = (ServerInterface) Naming.lookup("rmi://" + serverIp + "/server");
 
             try (Scanner scanner = new Scanner(System.in)) {
@@ -46,7 +52,6 @@ public class Manager extends UnicastRemoteObject implements Remote, Serializable
                         System.out.println("Exiting...");
                         break;
                     }
-//                    server = (ServerInterface) Naming.lookup("rmi://192.168.137.1/server");
                     handleUserChoice(server, scanner, choice);
                 }
             }
@@ -90,47 +95,46 @@ public class Manager extends UnicastRemoteObject implements Remote, Serializable
         }
     }
 
-    private static void captureUserPhoto(ServerInterface server, Scanner scanner) throws RemoteException {
+    private static void captureUserPhoto(ServerInterface server, Scanner scanner) throws RemoteException, MalformedURLException, NotBoundException {
         System.out.print("Enter username: ");
         String username = scanner.nextLine();
+        EmployeeInterface rmiEmployee =getEmployeeRmiByName(server,username);
 
-        EmployeeInterface employee = findEmployeeByName(server, username);
-        if (employee == null) {
+        if (rmiEmployee == null) {
             System.out.println("Employee not found.");
             return;
         }
-        Mat image = employee.captureImage();
+
+        byte[] image = rmiEmployee.captureImage();
+        System.out.println("get the bytes");
+        System.out.println(image);
+
+         // Convert the byte array to a MatOfByte
+        Mat matImage= bytesToMat(image);
+
         Path path = Paths.get(System.getProperty("user.home"), "Desktop", "distributed_system","capturedImage");
         String randomString =generateRandomString(6);
         String fileName = username +"_"+randomString +".jpg";
 
-        saveImageToFile(image, path,fileName);
-        return;
+        saveImageToFile(matImage, path,fileName);
     }
-
+    public static Mat bytesToMat(byte[] byteArray) {
+        // Convert the byte array to a MatOfByte
+        MatOfByte matOfByte = new MatOfByte(byteArray);
+        // Decode the MatOfByte to a Mat
+        return Imgcodecs.imdecode(matOfByte, Imgcodecs.IMREAD_UNCHANGED);
+    }
     private static void captureUserScreenshot(ServerInterface server, Scanner scanner) throws IOException, NotBoundException {
         System.out.print("Enter username: ");
         String username = scanner.nextLine();
 
-        EmployeeInterface employee = findEmployeeByName(server, username);
-        if (employee == null) {
+        EmployeeInterface rmiEmployee =getEmployeeRmiByName(server,username);
+        if (rmiEmployee == null) {
             System.out.println("Employee not found.");
             return;
         }
-        String employeeIp = employee.getDeviceAddress(); // or localhost
-        System.out.println(employeeIp);
-
-        String host = "rmi://" + employeeIp + "/employee" ;
-//        String host = "/employee";
-
-        EmployeeInterface rmiEmployee = new Employee("sd"); // FIXME
-//        EmployeeInterface rmiEmployee = (EmployeeInterface) Naming.lookup(host);
-        System.out.println(rmiEmployee.getName());
         byte[] byteImage = rmiEmployee.captureScreenshot();
         BufferedImage bufferedScreenshot  =convertByteArrayToBufferedImage(byteImage);
-
-        System.out.println(bufferedScreenshot);
-        System.out.println("store the bytes in var ");
 
         Path path = Paths.get(System.getProperty("user.home"), "Desktop", "distributed_system","screenshots");
         String randomString =generateRandomString(6);
@@ -140,14 +144,30 @@ public class Manager extends UnicastRemoteObject implements Remote, Serializable
 
     }
 
-    private static EmployeeInterface findEmployeeByName(ServerInterface server, String username) throws RemoteException {
-        System.out.println("findEmployeeByName");
+
+    // -SECTION helpers
+    private static EmployeeInterface findEmployeeInListByName(ServerInterface server, String username) throws RemoteException {
+
         for (EmployeeInterface employee : server.getEmployees()) {
             if (employee.getName().equalsIgnoreCase(username)) {
                 return employee;
             }
         }
         return null;
+    }
+    private  static EmployeeInterface getEmployeeRmiByName(ServerInterface server, String username ) throws RemoteException, MalformedURLException, NotBoundException {
+        EmployeeInterface employee = findEmployeeInListByName(server, username);
+        if (employee == null) {
+            System.out.println("Employee not found.");
+            return null ;
+        }
+        String employeeIp = employee.getDeviceAddress();
+        System.out.println(employeeIp);
+
+        String host = "rmi://" + employeeIp + "/employee" ;
+
+        EmployeeInterface rmiEmployee = (EmployeeInterface) Naming.lookup(host);
+        return rmiEmployee;
     }
 
     private static void saveImageToFile(Mat image,Path path, String filename) {

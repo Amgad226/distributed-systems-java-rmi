@@ -2,6 +2,9 @@ import classes.WebcamCapture;
 import interfaces.EmployeeInterface;
 import interfaces.ServerInterface;
 import org.opencv.core.Mat;
+import org.opencv.core.MatOfByte;
+import org.opencv.imgcodecs.Imgcodecs;
+
 import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.image.BufferedImage;
@@ -29,8 +32,14 @@ public class Employee extends UnicastRemoteObject implements Serializable, Emplo
     }
 
     @Override
-    public Mat captureImage() throws RemoteException {
-        return WebcamCapture.captureImage(this.name);
+    public byte[] captureImage() throws RemoteException {
+        Mat mat =  WebcamCapture.captureImage(this.name);
+
+        MatOfByte buffer = new MatOfByte();
+
+        Imgcodecs.imencode(".png", mat, buffer);
+
+        return buffer.toArray();
     }
 
     @Override
@@ -72,13 +81,19 @@ public class Employee extends UnicastRemoteObject implements Serializable, Emplo
             System.out.println("Enter your name: ");
             String name = reader.nextLine();
             reader.close();
+
             EmployeeInterface employee = new Employee(name);
-
-            String serverIp = "192.168.112.1";
-            ServerInterface server = (ServerInterface) Naming.lookup("rmi://" + serverIp + "/server");
-
+            ServerInterface server = (ServerInterface) Naming.lookup("rmi://192.168.137.1:5000/server");
             server.register(employee);
             System.out.println("Employee registered with name: " + name);
+
+
+            String ip = getIp() ;
+//            System.setProperty("java.rmi.server.hostname", "192.168.137.1"); // Uses the loopback address, 127.0.0.1, if you don't do this.
+            Naming.rebind("rmi://"+ip+"/employee",employee);
+            System.out.println("Monitoring employee is ready on :"+ip);
+
+
         } catch (Exception e) {
             e.printStackTrace();
         }
