@@ -9,8 +9,14 @@ import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.nio.file.Path;
+import java.util.List;
+import java.util.Map;
 import java.util.Random;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 public class Util {
     public static Mat bytesToMat(byte[] byteArray) {
@@ -76,5 +82,14 @@ public class Util {
             System.out.println("the converted byte[] to bufferedImage return null ");
         }
         return image ;
+    }
+    public static List<String> mapKeysToList(Map<String, ?> map) {
+        Set<String> keySet = map.keySet();
+        return keySet.stream().collect(Collectors.toList());
+    }
+
+    public static String getIp() throws UnknownHostException {
+        InetAddress inetAddress = InetAddress.getLocalHost();
+        return inetAddress.getHostAddress();
     }
 }
