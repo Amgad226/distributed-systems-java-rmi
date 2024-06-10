@@ -18,9 +18,10 @@ public class Server extends UnicastRemoteObject implements ServerInterface {
 
     // to store name and his socket instance
     private Map<String, Socket> clients = new HashMap<>();
-    public static final int SOCKET_SERVER_PORT = 4000;
-    public static final String SERVER_HOSTNAME = "192.168.43.194";
+    public static final String SERVER_HOSTNAME = "localhost";
     public static final String RMI_SERVER_PORT = "5000";
+    public static final int SOCKET_SERVER_PORT = 4000;
+
 
     private static Server instance;
     private Server() throws RemoteException {

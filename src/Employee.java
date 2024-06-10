@@ -103,7 +103,7 @@ public class Employee extends UnicastRemoteObject implements Serializable, Emplo
         }
     }
 
-    public static final String SERVER_HOST = "192.168.43.115";
+    public static final String SERVER_HOST = "localhost";
     public static final String RMI_SERVER_PORT = "5000";
     public static final int SOCKET_SERVER_PORT = 4000;
     public static void main(String[] args) {
