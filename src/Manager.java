@@ -3,7 +3,6 @@ import interfaces.EmployeeInterface;
 import interfaces.ServerInterface;
 import org.opencv.core.Core;
 import org.opencv.core.Mat;
-
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -16,13 +15,10 @@ import java.rmi.server.UnicastRemoteObject;
 import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 public class Manager extends UnicastRemoteObject {
     static {
         System.loadLibrary( Core.NATIVE_LIBRARY_NAME );
-
     }
     static String MANAGER_NAME = "manager";
     private static final long serialVersionUID = 1L;
@@ -39,11 +35,11 @@ public class Manager extends UnicastRemoteObject {
 
     public static void main(String[] args) {
         try {
-            String serverIp = "localhost:5000"; // Update with actual server IP if needed
+            String serverIp =Server.SERVER_HOSTNAME +":"+Server.RMI_SERVER_PORT;
             ServerInterface server = (ServerInterface) Naming.lookup("rmi://" + serverIp + "/server");
 
             Manager manager = new Manager(server);
-            manager.connectToChatServer("localhost", 5001); // Update with actual chat server IP if needed
+            manager.connectToChatServer(Server.SERVER_HOSTNAME, Server.SOCKET_SERVER_PORT); // Update with actual chat server IP if needed
 
             try (Scanner scanner = new Scanner(System.in)) {
                 while (true) {

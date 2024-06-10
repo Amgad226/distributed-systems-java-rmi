@@ -1,48 +1,31 @@
 import interfaces.EmployeeInterface;
 import interfaces.ServerInterface;
-import org.opencv.core.Mat;
-
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.rmi.Naming;
 import java.rmi.RemoteException;
-import java.rmi.registry.LocateRegistry;
 import java.rmi.server.UnicastRemoteObject;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
 
 public class Server extends UnicastRemoteObject implements ServerInterface {
+    // to store name and ip
     private Map<String, String> employees = new HashMap<>();
 
+    // to store name and his socket instance
     private Map<String, Socket> clients = new HashMap<>();
-    private static final int CHAT_PORT = 5001;
+    public static final int SOCKET_SERVER_PORT = 4000;
+    public static final String SERVER_HOSTNAME = "192.168.43.194";
+    public static final String RMI_SERVER_PORT = "5000";
 
-    static {
-//        try {
-        SERVER_HOSTNAME = "192.168.43.194";
-//        } catch (UnknownHostException e) {
-//            throw new RuntimeException(e);
-//        }
-    }
-
-    public static String SERVER_PORT = "5000";
-
-    // Singleton instance
     private static Server instance;
-
-    // Private constructor to prevent instantiation
     private Server() throws RemoteException {
         super();
     }
-
-    // Method to get the singleton instance
     public static Server getInstance() throws RemoteException {
         if (instance == null) {
             instance = new Server();
@@ -50,48 +33,46 @@ public class Server extends UnicastRemoteObject implements ServerInterface {
         return instance;
     }
 
+    // RMI function
     @Override
     public void register(EmployeeInterface e) throws RemoteException, UnknownHostException {
         System.out.println(e);
         employees.put(e.getName(),e.getDeviceAddress());
     }
-
-    //    @Override
+    @Override
     public void unregister(String employeeName) throws RemoteException {
         employees.remove(employeeName);
     }
-
     @Override
     public  Map<String, String> getEmployees()throws RemoteException{
         return this.employees;
     }
 
 
+    // Socket functions
+    @Override
     public void registerClient(String username, Socket socket)throws RemoteException {
         clients.put(username, socket);
     }
-
+    @Override
     public void unregisterClient(String username)throws RemoteException {
         clients.remove(username);
     }
-
+    @Override
     public Socket getClientSocket(String username)throws RemoteException {
         return clients.get(username);
     }
 
-    public static String SERVER_HOSTNAME;
-
 
     public static void main(String[] args) {
         try {
-            System.out.println(Server.SERVER_HOSTNAME + ":" + Server.SERVER_PORT);
-            System.setProperty("java.rmi.server.hostname", Server.SERVER_HOSTNAME); // Uses the loopback address, 127.0.0.1, if you don't do this.
-            Naming.rebind("rmi://" + SERVER_HOSTNAME + ":" + SERVER_PORT + "/server", Server.getInstance());
-            System.out.println("Monitoring Server is ready on:" + Server.SERVER_HOSTNAME);
+            System.setProperty("java.rmi.server.hostname", Server.SERVER_HOSTNAME);
+            Naming.rebind("rmi://" + SERVER_HOSTNAME + ":" + RMI_SERVER_PORT + "/server", Server.getInstance());
+            System.out.println("Monitoring Server is ready on:" +Server.SERVER_HOSTNAME + ":" + Server.RMI_SERVER_PORT);
 
             // Start chat server
-            ServerSocket serverSocket = new ServerSocket(CHAT_PORT);
-            System.out.println("Chat server started on port " + CHAT_PORT);
+            ServerSocket serverSocket = new ServerSocket(SOCKET_SERVER_PORT);
+            System.out.println("Chat server started on port " + SOCKET_SERVER_PORT);
 
             while (true) {
                 Socket clientSocket = serverSocket.accept();
